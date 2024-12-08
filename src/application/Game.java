@@ -37,7 +37,7 @@ enum Gender {
 	MALE, FEMALE
 }
 
-public class GameFinalVer extends Application {
+public class Game extends Application {
 	private static final int SCENE_WIDTH = 1000;
 	private static final int SCENE_HEIGHT = 600;
 	Alert errorAlert = new Alert(AlertType.ERROR);
