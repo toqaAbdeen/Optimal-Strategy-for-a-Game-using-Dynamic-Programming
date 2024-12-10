@@ -1,319 +1,178 @@
 package application;
 
-import java.util.Random;
-
-/*
- * This class was created to collect the functions for coins that the user will enter.
- * In this class, we defined private instance variable (numberOfCoins (which expresses the number of coins
- * entered by user(EVEN NUMBER)),coins(which expresses the number of these coins that the user will enter)
+/**
+ * This class was created to collect the functions for coins that the user will
+ * enter. In this class, we defined private instance variable (numberOfCoins
+ * (which expresses the number of coins entered by user(EVEN
+ * NUMBER)),coins(which expresses the number of these coins that the user will
+ * enter), dp (through which reach the optimal soluution and some), and methods
+ * that needed to implement them
  * 
- * */
+ */
 
 public class Coins {
-	/*
-	 * numberOfCoins: private instance variable of type integer. coins: private
-	 * instance variable that's an array of integers.
-	 * 
-	 */
-	private int numberOfCoins;
 	private int[] coins;
-
-	/*
-	 * Constructor for the class. Takes two parameters: numberOfCoins for the array
-	 * size and coins for the input array. Creates a new array of size
-	 * numberOfCoins.
-	 * 
-	 */
+	private int n;
+	private int[][] dp;
 
 	public Coins() {
 	}
 
-	public Coins(int numberOfCoins, int[] coins) {
-		super();
-		this.numberOfCoins = numberOfCoins;
-		this.coins = new int[numberOfCoins];
+	// Constructor to initialize the coins array, the DP table and Calculate the DP
+	// table
+	public Coins(int[] coins) {
+		this.coins = coins;
+		this.n = coins.length;
+		this.dp = new int[n][n];
+		calculateDP();
 	}
 
-	/*
-	 * Generate getter and setter for the variables In setter for numberOfCoins
-	 * (setNumberOfCoins) we added the condition that the number must be even.
+	/**
+	 * constructor to get the number of coins, which must be greater than 0, using
+	 * this size, the coins array will implemented
 	 * 
-	 */
-
-	/*
-	 * Getter method for numberOfCoins:
-	 * 
-	 * type int (as previously defined)
-	 * 
-	 * @param NO parameter
-	 * 
-	 * @return the value of the numberOfCoins previously entered
-	 * 
-	 */
-	public int getNumberOfCoins() {
-		return numberOfCoins;
+	 **/
+	public Coins(int size) {
+		if (size <= 0) {
+			throw new IllegalArgumentException("Size must be greater than 0.");
+		}
+		coins = new int[size];
+		n = size;
 	}
 
-	/*
-	 * Setter method for numberOfCoins:
-	 * 
-	 * type Void
-	 * 
-	 * @param numberOfCoins (type int)
-	 * 
-	 * @return NO return value
-	 * 
-	 * this method implement to set the value of numberOfCoins after making sure the
-	 * number is even using IF STATEMENT that check this condition (numberOfCoins %
-	 * 2 == 0),the the number isn't even the system will show
-	 * "The number of coins must be an even number."
-	 * 
+	/**
+	 * This method was implemented to initialize the array which will contain the
+	 * coins values, the size of the array will be the size entered by the user
+	 * through the constructor
 	 */
-	public void setNumberOfCoins(int numberOfCoins) {
-		if (numberOfCoins % 2 == 0)
-			this.numberOfCoins = numberOfCoins;
-		else
-			System.out.println("The number of coins must be an even number.");
+	public void initalizationCoins() {
+		for (int i = 0; i < n; i++) {
+			coins[i] = i + 1;
+		}
 	}
 
-	/*
-	 * Getter method for coins:
-	 * 
-	 * type array of integers (as previously defined)
-	 * 
-	 * @param NO parameter
-	 * 
-	 * @return the value of the coins that entered by the user
-	 * 
+	/**
+	 * This method is designed to remove a specific coin from the coins array so
+	 * that if the coin is found, all coins will move to the left, thus removing the
+	 * specific coin and thus reducing the size of the array by one. However, if the
+	 * coin is not found, the method will return false, and if successful, it
+	 * will return a true.
 	 */
-	public int[] getCoins() {
-		return coins;
-	}
 
-	/*
-	 * Setter method for coins:
-	 * 
-	 * type Void
-	 * 
-	 * @param coins (type array of integers)
-	 * 
-	 * @return NO return value
-	 * 
-	 * this method implement to set the value of numbers that user will enter it and
-	 * store in this array after checking that the coin value is positive.
-	 * 
-	 */
-	public void setCoins(int[] coins) {
-		for (int i = 0; i < coins.length; i++) {
-			if (coins[i] < 0) {
-				throw new IllegalArgumentException("Coins must be positive.");
+	public boolean removeCoin(int value) {
+		int index = -1;
+		for (int i = 0; i < n; i++) {
+			if (coins[i] == value) {
+				index = i;
+				break;
 			}
 		}
-		this.coins = coins;
+
+		if (index == -1) {
+			return false;
+		}
+
+		for (int i = index; i < n - 1; i++) {
+			coins[i] = coins[i + 1];
+		}
+
+		n--;
+		return true;
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder("Coins [numberOfCoins=" + numberOfCoins + ", coins=[");
-		for (int i = 0; i < coins.length; i++) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int i = 0; i < n; i++) {
 			sb.append(coins[i]);
-			if (i < coins.length - 1) {
+			if (i < n - 1)
 				sb.append(", ");
-			}
 		}
-		sb.append("]]");
+		sb.append("]");
 		return sb.toString();
 	}
 
-	public void game(int numberOfCoins, int[] coins) {
-		int[][] player1Table = new int[numberOfCoins][numberOfCoins];
-		int[][] player2Table = new int[numberOfCoins][numberOfCoins];
-
-		for (int k = 0; k < numberOfCoins; k++) {
-			for (int i = 0, j = k; j < numberOfCoins; i++, j++) {
-				if (k == 0) {
-					player1Table[i][j] = coins[i];
-					player2Table[i][j] = 0; // Player 2 gets nothing if Player 1 picks the only coin
-				} else if (k == 1) {
-					player1Table[i][j] = Math.max(coins[i], coins[j]);
-					player2Table[i][j] = Math.min(coins[i], coins[j]);
-				} else {
-					int pickLeft = coins[i] + player2Table[i + 1][j]; // Player 1 picks left coin
-					int pickRight = coins[j] + player2Table[i][j - 1]; // Player 1 picks right coin
-
-					if (pickLeft > pickRight) {
-						player1Table[i][j] = pickLeft;
-						player2Table[i][j] = player1Table[i + 1][j]; // Player 2's best choice after Player 1's pick
-					} else {
-						player1Table[i][j] = pickRight;
-						player2Table[i][j] = player1Table[i][j - 1]; // Player 2's best choice after Player 1's pick
-					}
-				}
-			}
-		}
-
-		// Display the results for both players
-		System.out.println("Player 1's scores:");
-		for (int i = 0; i < player1Table.length; i++) {
-			for (int j = 0; j < player1Table[i].length; j++) {
-				System.out.print(player1Table[i][j] + " ");
-			}
-			System.out.println();
-		}
-
-		System.out.println("Player 2's scores:");
-		for (int i = 0; i < player2Table.length; i++) {
-			for (int j = 0; j < player2Table[i].length; j++) {
-				System.out.print(player2Table[i][j] + " ");
-			}
-			System.out.println();
-		}
-
-		System.out.println("Maximum coins Player 1 can collect: " + player1Table[0][numberOfCoins - 1]);
-		System.out.println("Maximum coins Player 2 can collect: " + player2Table[0][numberOfCoins - 1]);
+	public int[] getCoins() {
+		return coins;
 	}
 
-	public String gameComputer(int numberOfCoins, int[] coins) {
-		int[][] player1Table = new int[numberOfCoins][numberOfCoins];
-		int[][] player2Table = new int[numberOfCoins][numberOfCoins];
-
-		// Fill the tables using dynamic programming
-		// ... (same as before)
-
-		StringBuilder result = new StringBuilder();
-		int player1Score = 0, player2Score = 0;
-		int i = 0, j = numberOfCoins - 1;
-
-		while (i <= j) {
-			// Computer 1's (Player 1's) turn
-			if (player1Table[i][j] == coins[i] + player2Table[i + 1][j]) {
-				result.append("Computer 1 picks coin " + coins[i] + " at index " + i + "\n");
-				player1Score += coins[i];
-				i++;
-			} else {
-				result.append("Computer 1 picks coin " + coins[j] + " at index " + j + "\n");
-				player1Score += coins[j];
-				j--;
-			}
-
-			// Fictional Player 2's turn (Computer plays randomly)
-			if (i <= j) {
-				Random random = new Random();
-				int choice = random.nextInt(2);
-				if (choice == 0) {
-					result.append("Computer 2 picks coin " + coins[i] + " at index " + i + "\n");
-					player2Score += coins[i];
-					i++;
-				} else {
-					result.append("Computer 2 picks coin " + coins[j] + " at index " + j + "\n");
-					player2Score += coins[j];
-					j--;
-				}
-			}
-		}
-
-		result.append("\nFinal Scores:\n");
-		result.append("Computer 1: " + player1Score + "\n");
-		result.append("Computer 2: " + player2Score + "\n");
-
-		// Determine the winner
-		if (player1Score > player2Score) {
-			result.append("Computer 1 wins!");
-		} else if (player2Score > player1Score) {
-			result.append("Computer 2 wins!");
-		} else {
-			result.append("It's a tie!");
-		}
-
-		return result.toString();
+	public void setCoins(int[] coins) {
+		this.coins = coins;
+		this.n = coins.length;
+		this.dp = new int[n][n]; // Reinitialize the DP table if coins array changes
+		calculateDP(); // Recalculate the DP table whenever coins change
 	}
 
-	public int maxValueInCoins(int[] coins) {
-		int[][] dp = new int[numberOfCoins][numberOfCoins];
-		for (int i = 0; i < numberOfCoins; i++) { //
-			dp[i][i] = coins[i];
-		}
-		for (int len = 2; len <= numberOfCoins; len++) {
-			for (int i = 0; i <= numberOfCoins - len; i++) {
-				int j = i + len - 1;
+	public int getN() {
+		return n;
+	}
+
+	public void setN(int n) {
+		this.n = n;
+	}
+
+	public int[][] getDp() {
+		return dp;
+	}
+
+	public void setDp(int[][] dp) {
+		this.dp = dp;
+	}
+
+
+	/**
+	 * 
+	 * Imagine you have a row of coins. You and your opponent take turns picking
+	 * coins from either end. You want to pick coins to get the highest total value.
+	 * 
+	 * To figure out the best strategy, we can break down the problem into smaller
+	 * subproblems. For each smaller section of coins, we calculate the best
+	 * possible score you can get. We consider two choices:
+	 * 
+	 * Pick the left coin: Your opponent will then pick the best coin remaining
+	 * (either the next one or the last one). Pick the right coin: Your opponent
+	 * will again pick the best remaining coin (either the next one or the
+	 * second-to-last one).
+	 * 
+	 * We store the best score for each subproblem in a table. By working our way
+	 * through the table, we can eventually find the best overall strategy for the
+	 * whole row of coins.
+	 * 
+	 * 
+	 * This method was implemented exactly as explained above.
+	 * 
+	 * 
+	 * The initial value in this game is the subsets that consist of one element,
+	 * where the first player will have to take the only available coin. In this
+	 * case, the DP table will be directly initialized with the value of the coin
+	 * (dp[i][j] = coins[i]). As for the subsets that consist of more than one coin,
+	 * the DP table will be filled by specifying the maximum score that the first
+	 * player can achieve through the two options: take the coin on the far right
+	 * or the far left.
+	 * 
+	 */
+	public int calculateDP() {
+
+		for (int length = 1; length <= n; length++) {
+			for (int i = 0; i <= n - length; i++) {
+				int j = i + length - 1;
+
 				if (i == j) {
 					dp[i][j] = coins[i];
-					continue;
-				}
-
-				if (i > j) {
-					continue;
-				}
-				int first = coins[i] + (i + 2 <= j ? Math.min(dp[i + 2][j], dp[i + 1][j - 1]) : 0);
-				int second = coins[j] + (j - 2 >= i ? Math.min(dp[i + 1][j - 1], dp[i][j - 2]) : 0);
-
-				dp[i][j] = Math.max(first, second);
-			}
-		}
-
-		printDp(dp);
-		return dp[0][numberOfCoins - 1];
-	}
-
-//	public void printDP(int[][] dp) {
-//		int maxWidth = String.valueOf(dp[0][0]).length();
-//		for (int i = 0; i < dp.length; i++) {
-//			for (int j = 0; j < dp.length; j++) {
-//				System.out.printf("%"+(maxWidth+1)+"d",dp[i][j]);
-//			}
-//			System.out.println();
-//		}
-//
-//	}
-	public void printDp(int[][] dp) {
-		// Find the maximum width for formatting
-		int maxWidth = 0;
-		for (int[] row : dp) {
-			for (int num : row) {
-				maxWidth = Math.max(maxWidth, String.valueOf(num).length());
-			}
-		}
-
-		// Print the dp table with aligned columns
-		for (int[] row : dp) {
-			for (int num : row) {
-				String formattedNumber = String.valueOf(num);
-				// Pad the number with spaces
-				while (formattedNumber.length() < maxWidth) {
-					formattedNumber = " " + formattedNumber;
-				}
-				System.out.print(formattedNumber + " ");
-			}
-			System.out.println();
-		}
-	}
-
-	public void printDpTable(int[][] dp) {
-		// Find the maximum width for formatting
-		int maxWidth = 0;
-		for (int[] row : dp) {
-			for (int num : row) {
-				maxWidth = Math.max(maxWidth, String.valueOf(num).length());
-			}
-		}
-
-		// Print the dp table with aligned columns
-		for (int[] row : dp) {
-			for (int i = 0; i < row.length; i++) {
-				String formattedNumber = String.valueOf(row[i]);
-				// Pad the number with spaces
-				while (formattedNumber.length() < maxWidth) {
-					formattedNumber = " " + formattedNumber;
-				}
-				// Indicate which player's value is being printed
-				if (i == 0) {
-					System.out.print("Player 1: " + formattedNumber + " ");
 				} else {
-					System.out.print("Player 2: " + formattedNumber + " ");
+
+					int pickLeft = coins[i]
+							+ Math.min((i + 2 <= j ? dp[i + 2][j] : 0), (i + 1 <= j - 1 ? dp[i + 1][j - 1] : 0));
+
+					int pickRight = coins[j]
+							+ Math.min((i + 1 <= j - 1 ? dp[i + 1][j - 1] : 0), (i <= j - 2 ? dp[i][j - 2] : 0));
+
+					dp[i][j] = Math.max(pickLeft, pickRight);
 				}
 			}
-			System.out.println();
 		}
-	}
 
+		return dp[0][n - 1];
+	}
 }

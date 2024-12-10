@@ -1,6 +1,5 @@
 package application;
 
-
 import java.util.Random;
 
 import javafx.application.Application;
@@ -13,6 +12,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
@@ -27,11 +27,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 
 enum Gender {
 	MALE, FEMALE
@@ -41,18 +42,30 @@ public class Game extends Application {
 	private static final int SCENE_WIDTH = 1000;
 	private static final int SCENE_HEIGHT = 600;
 	Alert errorAlert = new Alert(AlertType.ERROR);
-	Alert warningAlert = new Alert(AlertType.WARNING);
 	Alert infoAlert = new Alert(AlertType.INFORMATION);
-	Alert exceptionAlert = new Alert(AlertType.ERROR);
 	Coins coins = new Coins();
 	String userChoice;
-	int rowIndex = 0;
-	int columnIndex = 0;
-	private boolean playerturn = false; // this flag to know which player should play ---> 0 to player one ,1 to player
-										// two
-	boolean isPlayerOneTurn = true;
 	Gender selectedGenderPlayer1 = null;
 	Gender selectedGenderPlayer2 = null;
+	boolean isClick = false;
+	GridPane coinGrid = new GridPane();
+	TextField enterNumbersTF = new TextField();
+	TextField selectNumbersOfCoinsTF = new TextField();
+	private int[] player1Selections;
+	private int[] player2Selections;
+	Label playerOneNameLabel = new Label();
+	Label playerTwoNameLabel = new Label();
+	Button showNumber = new Button("Results");
+	private GridPane playerOneNumbers = new GridPane();
+	private GridPane playerTwoNumbers = new GridPane();
+	private int player1Score = 0;
+	private int player2Score = 0;
+	private int turn = 1;
+	TextField playerOneNameTF = new TextField();
+	TextField playerTwoNameTF = new TextField();
+	BorderPane gameBetweenTwoPlayersBP = new BorderPane();
+	GridPane gridPane = new GridPane();
+	private Label resultLabel = new Label();
 
 	public static void main(String[] args) {
 		launch(args);
@@ -65,21 +78,21 @@ public class Game extends Application {
 		///////////////// SCOND SCREEN
 
 		Button selectOnePlayer = new Button("One Player");
-		selectOnePlayer.setStyle("-fx-background-color: rgb(172, 230, 0); " + "-fx-background-radius: 10em; "
+		selectOnePlayer.setStyle("-fx-background-color: rgb(1, 223, 148); " + "-fx-background-radius: 10em; "
 				+ "-fx-padding: 10px 30px; " + "-fx-border-width: 3; " + "-fx-border-color: rgb(0, 0, 0); "
 				+ "-fx-font-size: 30px; " + "-fx-font-family: 'Arial'; " + "-fx-text-fill: white; "
-				+ "-fx-font-weight: bold;-fx-border-color: transparent;");
+				+ "-fx-font-weight: bold;-fx-border-color: transparent; -fx-font-family: 'Courier New';");
 
-		Button selectTwoPlayer = new Button("Tow Playeres");
-		selectTwoPlayer.setStyle("-fx-background-color: rgb(172, 230, 0); " + "-fx-background-radius: 10em; "
+		Button selectTwoPlayer = new Button("Two Players");
+		selectTwoPlayer.setStyle("-fx-background-color: rgb(1, 223, 148); " + "-fx-background-radius: 10em; "
 				+ "-fx-padding: 10px 30px; " + "-fx-border-width: 3; " + "-fx-border-color: rgb(0, 0, 0); "
 				+ "-fx-font-size: 30px; " + "-fx-font-family: 'Arial'; " + "-fx-text-fill: white; "
-				+ "-fx-font-weight: bold;-fx-border-color: transparent;");
+				+ "-fx-font-weight: bold;-fx-border-color: transparent; -fx-font-family: 'Courier New';");
 		Button restartForFirstScreen = new Button("Restart");
-		restartForFirstScreen.setStyle("-fx-background-color: rgb(172, 230, 0); " + "-fx-background-radius: 10em; "
+		restartForFirstScreen.setStyle("-fx-background-color: rgb(1, 223, 148); " + "-fx-background-radius: 10em; "
 				+ "-fx-padding: 10px 30px; " + "-fx-border-width: 3; " + "-fx-border-color: rgb(0, 0, 0); "
 				+ "-fx-font-size: 30px; " + "-fx-font-family: 'Arial'; " + "-fx-text-fill: white; "
-				+ "-fx-font-weight: bold;-fx-border-color: transparent;");
+				+ "-fx-font-weight: bold;-fx-border-color: transparent; -fx-font-family: 'Courier New';");
 
 		HBox selectNumberOfPlayersHB = new HBox(20);
 		selectNumberOfPlayersHB.getChildren().addAll(selectOnePlayer, selectTwoPlayer);
@@ -113,45 +126,62 @@ public class Game extends Application {
 		GridPane playersInfoGridPane = new GridPane();
 
 		Label playerNameInfoLabel = new Label("Name");
-		playerNameInfoLabel.setStyle("-fx-font-size: 30px;-fx-font-weight: bold;");// fx-font-family: 'Arial';
+		playerNameInfoLabel.setStyle(
+				"-fx-font-size: 30px;-fx-font-weight: bold;  -fx-font-family: 'Courier New'; -fx-text-fill: white;");
 
 		Label playerOneInfoLabel = new Label("Player One");
-		playerOneInfoLabel.setStyle("-fx-font-size: 40px;-fx-font-weight: bold;");// fx-font-family: 'Arial';
+		playerOneInfoLabel.setStyle(
+				"-fx-font-size: 40px;-fx-font-weight: bold;  -fx-font-family: 'Courier New';-fx-text-fill: white;");
 
-		TextField playerOneNameTF = new TextField();
 		playerOneNameTF.setPromptText("Name");
-		playerOneNameTF.setStyle("-fx-border-color: rgb(0, 0, 0); -fx-border-width: 4; -fx-font-size: 15");
+		playerOneNameTF.setStyle(
+				"-fx-border-color: rgb(21, 32, 50); -fx-border-width: 4; -fx-font-size: 15;-fx-font-family: 'Courier New';-fx-text-fill: rgb(21, 32, 50);");
 
 		Label playerTwoInfoLabel = new Label("Player Two");
-		playerTwoInfoLabel.setStyle("-fx-font-size: 40px;-fx-font-weight: bold;");// fx-font-family: 'Arial';
-
-		TextField playerTwoNameTF = new TextField();
+		playerTwoInfoLabel.setStyle(
+				"-fx-font-size: 40px;-fx-font-weight: bold;-fx-font-family: 'Courier New';-fx-text-fill: white;");
 		playerTwoNameTF.setPromptText("Name");
-		playerTwoNameTF.setStyle("-fx-border-color: rgb(0, 0, 0); -fx-border-width: 4; -fx-font-size: 15");
+		playerTwoNameTF.setStyle(
+				"-fx-border-color:rgb(21, 32, 50); -fx-border-width: 4; -fx-font-size: 15;-fx-font-family: 'Courier New';-fx-text-fill: rgb(21, 32, 50);");
 
 		Label playerGenderInfoLabel = new Label("Gender");
-		playerGenderInfoLabel.setStyle("-fx-font-size: 30px;-fx-font-weight: bold;");// fx-font-family: 'Arial';
+		playerGenderInfoLabel.setStyle(
+				"-fx-font-size: 30px;-fx-font-weight: bold;-fx-font-family: 'Courier New';-fx-text-fill: white;");
 
 		CheckBox player1Male = new CheckBox("Male");
-		player1Male.setFont(Font.font("", FontWeight.BOLD, 15));
+		player1Male.setFont(Font.font("Courier New", FontWeight.BOLD, 15));
 		CheckBox player1Female = new CheckBox("Female");
-		player1Female.setFont(Font.font("", FontWeight.BOLD, 15));
+		player1Female.setFont(Font.font("Courier New", FontWeight.BOLD, 15));
 		VBox player1Box = new VBox(10, player1Male, player1Female);
 		player1Box.setAlignment(Pos.CENTER_LEFT);
 
 		// Player 2 section
 		CheckBox player2Male = new CheckBox("Male");
-		player2Male.setFont(Font.font("", FontWeight.BOLD, 15));
+		player2Male.setFont(Font.font("Courier New", FontWeight.BOLD, 15));
 		CheckBox player2Female = new CheckBox("Female");
-		player2Female.setFont(Font.font("", FontWeight.BOLD, 15));
+		player2Female.setFont(Font.font("Courier New", FontWeight.BOLD, 15));
 		VBox player2Box = new VBox(10, player2Male, player2Female);
 		player2Box.setAlignment(Pos.CENTER_LEFT);
 
 		Button enterPlayersInofButton = new Button("Enter");
 		enterPlayersInofButton.setStyle(
-				"-fx-border-width: 3px;-fx-border-color: rgb(0, 0, 0);-fx-background-color: rgb(179, 255, 224);"
+				"-fx-border-width: 3px;-fx-border-color: white;-fx-background-color: rgb(21, 32, 50);  -fx-font-family: 'Courier New';"
 						+ " -fx-padding: 10px 10px;"
-						+ "-fx-border-width: 3; -fx-font-size: 40px ;-fx-text-fill: black;-fx-font-weight: bold;");
+						+ "-fx-border-width: 3; -fx-font-size: 40px ;-fx-text-fill: white;-fx-font-weight: bold;");
+
+		Button backButtonInfoSceneButton = new Button("Back");
+		backButtonInfoSceneButton.setStyle(
+				"-fx-border-width: 3px;-fx-border-color: white;-fx-background-color: rgb(21, 32, 50);  -fx-font-family: 'Courier New';"
+						+ " -fx-padding: 10px 10px;"
+						+ "-fx-border-width: 3; -fx-font-size: 40px ;-fx-text-fill: white;-fx-font-weight: bold;");
+
+		backButtonInfoSceneButton.setOnAction(event -> {
+			primaryStage.setScene(SelectNumberOfPlayersScene);
+			userChoice = "";
+			enterNumbersTF.clear();
+			selectNumbersOfCoinsTF.clear();
+			coinGrid.getChildren().clear();
+		});
 
 		playersInfoGridPane.add(playerNameInfoLabel, 0, 1);
 		playersInfoGridPane.add(playerOneInfoLabel, 1, 0);
@@ -163,6 +193,7 @@ public class Game extends Application {
 		playersInfoGridPane.add(player2Box, 2, 2);
 
 		playersInfoGridPane.add(enterPlayersInofButton, 3, 0);
+		playersInfoGridPane.add(backButtonInfoSceneButton, 3, 1);
 
 		playersInfoGridPane.setVgap(30);
 		playersInfoGridPane.setHgap(50);
@@ -172,21 +203,34 @@ public class Game extends Application {
 		playersInfoBP.setCenter(playersInfoGridPane);
 		playersInfoBP.setAlignment(playersInfoGridPane, Pos.CENTER_LEFT);
 
-		playersInfoBP.setStyle("-fx-background-color: rgb(210, 255, 77)");
+		playersInfoBP.setStyle("-fx-background-color: rgb(1, 223, 148)");
 
 		playersInfoBP.setPadding(new Insets(0, 500, 300, 100));
 		Scene twoPlayerInfoScene = new Scene(playersInfoBP, SCENE_WIDTH, SCENE_HEIGHT);
 		selectTwoPlayer.setOnAction(event -> {
 			userChoice = "Two player";
 			primaryStage.setScene(twoPlayerInfoScene);
+			playerOneNameTF.setText("");
+			playerTwoNameTF.setText("");
+			player1Male.setSelected(false);
+			player1Female.setSelected(false);
+			player2Male.setSelected(false);
+			player2Female.setSelected(false);
+			primaryStage.setScene(twoPlayerInfoScene);
+			enterNumbersTF.clear();
+			selectNumbersOfCoinsTF.clear();
+			coinGrid.getChildren().clear();
+			isClick = false;
 		});
-		BorderPane test = new BorderPane();
-		Scene onePlayerSelectedScene = new Scene(test);
-		selectOnePlayer.setOnAction(event -> {
-			userChoice = "One player";
-			primaryStage.setScene(onePlayerSelectedScene);
 
-		});
+		EventHandler<MouseEvent> backHandler = event -> {
+
+			if (userChoice == "Two player") {
+				primaryStage.setScene(twoPlayerInfoScene);
+			} else {
+				primaryStage.setScene(SelectNumberOfPlayersScene);
+			}
+		};
 
 		//////////////// FORTH SCREEN
 
@@ -229,28 +273,23 @@ public class Game extends Application {
 //		randomNumbersGP.setPrefSize(800, 400);
 
 		Label selectNumbersLabel = new Label("What source of coins do you want?");
-		selectNumbersLabel.setStyle("-fx-font-size: 40px;-fx-font-weight: bold;");// fx-font-family: 'Arial';
+		selectNumbersLabel.setStyle(
+				"-fx-font-size: 40px; -fx-font-weight: bold; -fx-font-family: 'Courier New'; -fx-text-fill: white;");
 
 		RadioButton selectNumbersManualRB = new RadioButton("Manual");
-		selectNumbersManualRB.setStyle("-fx-font-size: 20px; -fx-padding: 10px 20px;");
+		selectNumbersManualRB.setStyle("-fx-font-size: 20px; -fx-padding: 10px 20px;-fx-font-family: 'Courier New';");
 
 		RadioButton selectNumbersRandomRB = new RadioButton("Random");
-		selectNumbersRandomRB.setStyle("-fx-font-size: 20px; -fx-padding: 10px 20px;");
-
-		RadioButton selectNumbersFileRB = new RadioButton("File");
-		selectNumbersFileRB.setStyle("-fx-font-size: 20px; -fx-padding: 10px 20px;");
+		selectNumbersRandomRB.setStyle("-fx-font-size: 20px; -fx-padding: 10px 20px;-fx-font-family: 'Courier New';");
 
 		ToggleGroup selectNumbersTG = new ToggleGroup();
 		selectNumbersManualRB.setToggleGroup(selectNumbersTG);
 		selectNumbersRandomRB.setToggleGroup(selectNumbersTG);
-		selectNumbersFileRB.setToggleGroup(selectNumbersTG);
 
-		TextField selectNumbersOfCoinsTF = new TextField();
 		selectNumbersOfCoinsTF.setVisible(false);
 		selectNumbersOfCoinsTF.setPromptText("Even number of coins");
 		selectNumbersOfCoinsTF.setStyle(" -fx-border-width: 4; -fx-font-size: 15");
 
-		TextField enterNumbersTF = new TextField();
 		enterNumbersTF.setVisible(false);
 		enterNumbersTF.setPromptText("Coins numbers are in the form n1,n2,n3,...");
 		enterNumbersTF.setStyle(" -fx-border-width: 4; -fx-font-size: 15");
@@ -270,28 +309,28 @@ public class Game extends Application {
 			}
 			RadioButton selectedRadioButton = (RadioButton) newValue;
 			String selectedNumbersOptionString = selectedRadioButton.getText();
-			System.out.println("Selected Numbers Option: " + selectedNumbersOptionString);
 		});
 
-//		Text confirmOptionsText = new Text("Confirm Options");
-//		confirmOptionsText.setFont(Font.font("", FontWeight.BOLD, 15));
-//
-//		Circle confirmOptionsCircle = new Circle(100, 100, 75);
-//		confirmOptionsCircle.setFill(Color.rgb(179, 255, 224));
-//
-//		StackPane confirmOptionsSP = new StackPane(confirmOptionsCircle, confirmOptionsText);
+		Button ConfirmButton = new Button("Confirm Action");
 
-		Text nextText = new Text("Next");
-		nextText.setFont(Font.font("", FontWeight.BOLD, 15));
+		ConfirmButton
+				.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+						+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+						+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
 
-		Circle enterCircle = new Circle(100, 100, 40);
-		enterCircle.setFill(Color.rgb(179, 255, 224));
+		Button nextButton = new Button("Next");
 
-		StackPane enterSP = new StackPane(enterCircle, nextText);
+		nextButton.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+				+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+				+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
 
+		Button backButton = new Button("Back");
+		backButton.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+				+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+				+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
 		HBox selectNumbersHB = new HBox(15);
-		selectNumbersHB.getChildren().addAll(selectNumbersManualRB, selectNumbersRandomRB, selectNumbersFileRB,
-				enterSP);
+		selectNumbersHB.getChildren().addAll(selectNumbersManualRB, selectNumbersRandomRB, ConfirmButton, nextButton,
+				backButton);
 		selectNumbersHB.setAlignment(Pos.CENTER_LEFT);
 
 		VBox selectNumbersVB = new VBox(50);
@@ -299,7 +338,7 @@ public class Game extends Application {
 		selectNumbersVB.setAlignment(Pos.CENTER_LEFT);
 
 		EventHandler<MouseEvent> clickHandler = event -> {
-			System.out.println("Circle clicked!");
+
 			if (selectNumbersManualRB.isSelected()) {
 				if (selectNumbersOfCoinsTF.getText().isEmpty()) {
 					errorAlert.setTitle("Error in choosing the number of coins");
@@ -313,59 +352,80 @@ public class Game extends Application {
 				} else {
 					try {
 						if (Integer.parseInt(selectNumbersOfCoinsTF.getText()) % 2 == 0) {
-							coins.setNumberOfCoins(Integer.parseInt(selectNumbersOfCoinsTF.getText()));
+							coins.setN(Integer.parseInt(selectNumbersOfCoinsTF.getText()));
 							String text = enterNumbersTF.getText();
 							String[] numbers = text.split(",");
 
 							int[] intArray = new int[numbers.length];
-							System.out.println("intArray.length  : " + intArray.length);
-							System.out.println("coins.getNumberOfCoins(): " + coins.getNumberOfCoins());
 							if (intArray.length == Integer.parseInt(selectNumbersOfCoinsTF.getText())) {
 								for (int i = 0; i < numbers.length; i++) {
 									intArray[i] = Integer.parseInt(numbers[i].trim());
 								}
 								coins.setCoins(intArray);
-								System.out.println(coins.toString());
-//								confirmOptionsCircle.setFill(Color.rgb(214, 214, 194));
+
 								randomNumbersGP.getChildren().clear();
 
-								for (int i = 0; i < coins.getNumberOfCoins(); i++) {
+								int columnIndex = 0;
+								int rowIndex = 0;
+
+								GridPane coinGrid = new GridPane();
+								for (int i = 0; i < coins.getN(); i++) {
 									int number = coins.getCoins()[i];
 									Text numberText = new Text(String.valueOf(number));
+									numberText.setStyle(
+											"-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Courier New';");
+
 									StackPane framedNumberSP = new StackPane(numberText);
 									framedNumberSP.setPadding(new Insets(10));
-									framedNumberSP.setStyle("-fx-border-color: black; -fx-border-width: 5;");
-									randomNumbersGP.add(framedNumberSP, columnIndex, rowIndex);
+									framedNumberSP.setStyle("-fx-border-color: rgb(21, 32, 50); -fx-border-width: 2;");
+									framedNumberSP.setPrefWidth(80);
+									framedNumberSP.setPrefHeight(80);
+
+									coinGrid.add(framedNumberSP, columnIndex, rowIndex);
 									columnIndex++;
 
-									if (columnIndex == 10) {
+									if (columnIndex == 7) {
 										rowIndex++;
 										columnIndex = 0;
 									}
 								}
 
-							} else if (intArray.length >= Integer.parseInt(selectNumbersOfCoinsTF.getText())) {
-								errorAlert.setTitle("Error in entering coins numbers");
-								errorAlert.setContentText(
-										"It seems that you entered a number(s) that exceed  the number of coins. Please make sure that you have entered correctly to complete the process.");
-								errorAlert.show();
+								ScrollPane scrollPane = new ScrollPane();
+								scrollPane.setContent(coinGrid);
+								scrollPane.setFitToWidth(true);
+								scrollPane.setFitToHeight(true);
+
+								int rowHeight = 90;
+								int visibleRows = 7;
+								scrollPane.setPrefHeight(rowHeight * visibleRows);
+
+								scrollPane.setPrefWidth(600);
+
+								randomNumbersGP.getChildren().add(scrollPane);
+								randomNumbersGP.setPrefWidth(800);
+								randomNumbersGP.setPrefHeight(600);
+								scrollPane.setStyle(
+										"-fx-background: rgb(1, 223, 148); -fx-background-color: rgb(1, 223, 148);");
+
+								coinGrid.setPrefWidth(800);
+								coinGrid.setPrefHeight(600);
+
 							} else {
 								errorAlert.setTitle("Error in entering coins numbers");
 								errorAlert.setContentText(
-										"It seems that there is a missing number(s) for the number of coins. Please make sure that you have entered correctly to complete the process.");
+										"The number of coins entered does not match the selected value. Please check.");
 								errorAlert.show();
 							}
 						} else {
 							errorAlert.setTitle("Error in entering the number of coins");
-							errorAlert.setContentText(
-									"You must enter an even number for the number of coins.Please make sure that you have entered correctlyto complete the process.");
+							errorAlert.setContentText("You must enter an even number for the number of coins.");
 							errorAlert.show();
 						}
 					} catch (Exception e) {
 						exceptionAlertMethod(e);
 					}
 				}
-
+				isClick = true;
 			} else if (selectNumbersRandomRB.isSelected()) {
 				if (selectNumbersOfCoinsTF.getText().isEmpty()) {
 					errorAlert.setTitle("Error in choosing the number of coins");
@@ -373,69 +433,93 @@ public class Game extends Application {
 					errorAlert.show();
 				} else {
 					if (Integer.parseInt(selectNumbersOfCoinsTF.getText()) % 2 == 0) {
-
-						coins.setNumberOfCoins(Integer.parseInt(selectNumbersOfCoinsTF.getText()));
+						coins.setN(Integer.parseInt(selectNumbersOfCoinsTF.getText()));
 
 						int[] randomNumbers = new int[Integer.parseInt(selectNumbersOfCoinsTF.getText())];
 
 						randomNumbersGP.getChildren().clear();
 
 						Random random = new Random();
+						int columnIndex = 0;
+						int rowIndex = 0;
+
 						for (int i = 0; i < randomNumbers.length; i++) {
 							int randomNumber = random.nextInt(100) + 1;
 							randomNumbers[i] = randomNumber;
 
 							Text numberText = new Text(String.valueOf(randomNumber));
+							numberText.setStyle(
+									"-fx-font-size: 24px; -fx-font-weight: bold; -fx-font-family: 'Courier New';");
+
 							StackPane framedNumberSP = new StackPane(numberText);
 							framedNumberSP.setPadding(new Insets(10));
-							framedNumberSP.setStyle("-fx-border-color: black; -fx-border-width: 5;");
-							randomNumbersGP.add(framedNumberSP, columnIndex, rowIndex);
+							framedNumberSP.setStyle("-fx-border-color: rgb(21, 32, 50); -fx-border-width: 2;");
+							framedNumberSP.setPrefWidth(80);
+							framedNumberSP.setPrefHeight(80);
+							coinGrid.add(framedNumberSP, columnIndex, rowIndex);
 							columnIndex++;
 
-							if (columnIndex == 10) {
+							if (columnIndex == 7) {
 								rowIndex++;
 								columnIndex = 0;
 							}
 						}
 
+						ScrollPane scrollPane = new ScrollPane();
+						scrollPane.setContent(coinGrid);
+						scrollPane.setFitToWidth(true);
+						scrollPane.setFitToHeight(true);
+
+						int rowHeight = 90;
+						int visibleRows = 7;
+						scrollPane.setPrefHeight(rowHeight * visibleRows);
+
+						scrollPane.setPrefWidth(600);
+
+						randomNumbersGP.getChildren().add(scrollPane);
+						randomNumbersGP.setPrefWidth(800);
+						randomNumbersGP.setPrefHeight(600);
+						scrollPane
+								.setStyle("-fx-background: rgb(1, 223, 148); -fx-background-color: rgb(1, 223, 148);");
+
+						coinGrid.setPrefWidth(800);
+						coinGrid.setPrefHeight(600);
+
 						coins.setCoins(randomNumbers);
 					} else {
 						errorAlert.setTitle("Error in entering the number of coins");
-						errorAlert.setContentText(
-								"You must enter an even number for the number of coins.Please make sure that you have entered correctlyto complete the process.");
+						errorAlert.setContentText("You must enter an even number for the number of coins.");
 						errorAlert.show();
-
 					}
+					isClick = true;
 				}
-
-			} else if (selectNumbersFileRB.isSelected()) {
-
 			} else {
 				errorAlert.setTitle("Error while selecting the number source for coins");
 				errorAlert.setContentText("You must choose the source of numbers for coins to complete the process.");
 				errorAlert.show();
 			}
-//			confirmOptionsCircle.setDisable(true);
-
 		};
 
-//		confirmOptionsCircle.setOnMouseClicked(clickHandler);
-//		confirmOptionsText.setOnMouseClicked(clickHandler);
-
-		Button button = new Button("Confirm Action");
-//		if (selectNumbersManualRB.isSelected() || selectNumbersRandomRB.isSelected()
-//				|| selectNumbersFileRB.isSelected())
-			button.setOnMouseClicked(clickHandler);
+		ConfirmButton.setOnMouseClicked(clickHandler);
 
 		selectNumbersVB.getChildren().addAll(selectNumbersLabel, selectNumbersHB, selectNumbersOfCoinsTF,
-				enterNumbersTF, randomNumbersGP, button);
+				enterNumbersTF, randomNumbersGP);
 		BorderPane selectNumbersBP = new BorderPane();
 		selectNumbersBP.setLeft(selectNumbersVB);
 		selectNumbersBP.setAlignment(selectNumbersVB, Pos.CENTER_LEFT);
 		selectNumbersBP.setPadding(new Insets(0, 500, 300, 100));
-		selectNumbersBP.setStyle("-fx-background-color: rgb(210, 255, 77)");
+		selectNumbersBP.setStyle("-fx-background-color: rgb(1, 223, 148)");
 
 		Scene selectSourceNumbersScene = new Scene(selectNumbersBP, SCENE_WIDTH, SCENE_HEIGHT);
+
+		selectOnePlayer.setOnAction(event -> {
+			userChoice = "One player";
+			primaryStage.setScene(selectSourceNumbersScene);
+			enterNumbersTF.clear();
+			selectNumbersOfCoinsTF.clear();
+			coinGrid.getChildren().clear();
+			isClick = false;
+		});
 
 		enterPlayersInofButton.setOnAction(event -> {
 			if (playerOneNameTF.getText().isEmpty() || playerTwoNameTF.getText().isEmpty()) {
@@ -463,7 +547,7 @@ public class Game extends Application {
 						+ playerOneNameTF.getText() + "," + (selectedGenderPlayer1 == Gender.MALE ? "Male" : "Female")
 						+ ".\nPlayer Two:" + playerTwoNameTF.getText() + ","
 						+ (selectedGenderPlayer2 == Gender.MALE ? "Male" : "Female"));
-				infoAlert.show();
+				infoAlert.showAndWait();
 				primaryStage.setScene(selectSourceNumbersScene);
 			}
 		});
@@ -478,88 +562,159 @@ public class Game extends Application {
 
 		BorderPane onePlayerGameBP = new BorderPane();
 		Scene onePlayerGameScene = new Scene(onePlayerGameBP, SCENE_WIDTH, SCENE_HEIGHT);
-		BorderPane gameBetweenTwoPlayersBP = new BorderPane();
 		Scene gameBetweenTwoPlayersScene = new Scene(gameBetweenTwoPlayersBP, SCENE_WIDTH, SCENE_HEIGHT);
+		Button BackGameButton = new Button("Back");
 
-		EventHandler<MouseEvent> enterHandler = event -> {
-			
-			showConfirmationDialog();
-			
-			System.out.println("Test");
-			System.out.println(coins.getNumberOfCoins() + "   coins.getNumberOfCoins()");
-			if (userChoice == "Two player") {
-				Image onePlayerImage = null;
-				Image twoPlayerImage = null;
-				if (selectedGenderPlayer1 == Gender.MALE) {
-					onePlayerImage = new Image("/person7.png");
-				} else {
-					onePlayerImage = new Image("/female.png");
+		BackGameButton.setOnAction(event -> {
+			primaryStage.setScene(selectSourceNumbersScene);
+			enterNumbersTF.clear();
+			selectNumbersOfCoinsTF.clear();
+			coinGrid.getChildren().clear();
+			isClick = false;
+		});
 
-				}
-				if (selectedGenderPlayer2 == Gender.MALE) {
-					twoPlayerImage = new Image("/person7.png");
-				} else {
-					twoPlayerImage = new Image("/female.png");
+		BackGameButton
+				.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+						+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+						+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
 
-				}
+		Button RestatGameButton = new Button("Restart");
 
-				ImageView onePlayerImageView = new ImageView(onePlayerImage);
-				ImageView TwoPlayerImageView = new ImageView(twoPlayerImage);
-				onePlayerImageView.setFitWidth(200);
-				onePlayerImageView.setFitHeight(200);
-				TwoPlayerImageView.setFitWidth(200);
-				TwoPlayerImageView.setFitHeight(200);
+		RestatGameButton.setOnAction(event -> {
+			playerOneNameTF.setText("");
+			playerTwoNameTF.setText("");
+			player1Male.setSelected(false);
+			player1Female.setSelected(false);
+			player2Male.setSelected(false);
+			player2Female.setSelected(false);
+			primaryStage.setScene(twoPlayerInfoScene);
+			enterNumbersTF.clear();
+			selectNumbersOfCoinsTF.clear();
+			coinGrid.getChildren().clear();
+			isClick = false;
+		});
 
-				Label playerOneNameLabel = new Label();
-				playerOneNameLabel.setText(playerOneNameTF.getText());
-				playerOneNameLabel.setStyle("-fx-font-size: 30px;-fx-font-weight: bold;-fx-text-fill: Black");
+		RestatGameButton
+				.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+						+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+						+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
 
-				Label playerTwoNameLabel = new Label();
-				playerTwoNameLabel.setText(playerTwoNameTF.getText());
-				playerTwoNameLabel.setStyle("-fx-font-size: 30px;-fx-font-weight: bold;-fx-text-fill: Black");
+		EventHandler<MouseEvent> nextHandler = event -> {
 
-				GridPane twoPlayerGameGP = new GridPane();
-				twoPlayerGameGP.add(onePlayerImageView, 0, 0);
-				twoPlayerGameGP.add(TwoPlayerImageView, 1, 0);
-				twoPlayerGameGP.add(playerOneNameLabel, 0, 1);
-				twoPlayerGameGP.add(playerTwoNameLabel, 1, 1);
-				twoPlayerGameGP.setHgap(200);
-				twoPlayerGameGP.setVgap(20);
+			if (isClick) {
+				showConfirmationDialog();
 
-				try {
+				if (userChoice.equals("Two player")) {
+					Image onePlayerImage = selectedGenderPlayer1 == Gender.MALE ? new Image("/male.png")
+							: new Image("/female.png");
+					Image twoPlayerImage = selectedGenderPlayer2 == Gender.MALE ? new Image("/male.png")
+							: new Image("/female.png");
 
-					if (!selectNumbersOfCoinsTF.getText().isEmpty() || !enterNumbersTF.getText().isEmpty()) {
-						StackPane pane = new StackPane();
-						displayCoinsInGridPane(gameBetweenTwoPlayersBP, gameBetweenTwoPlayersScene, coins, pane);
+					// Create ImageViews for player images
+					ImageView onePlayerImageView = new ImageView(onePlayerImage);
+					ImageView twoPlayerImageView = new ImageView(twoPlayerImage);
+					onePlayerImageView.setFitWidth(200);
+					onePlayerImageView.setFitHeight(200);
+					twoPlayerImageView.setFitWidth(200);
+					twoPlayerImageView.setFitHeight(200);
+
+					playerOneNameLabel.setText(playerOneNameTF.getText());
+					playerOneNameLabel.setStyle(
+							"-fx-font-size: 30px;-fx-font-weight: bold;-fx-text-fill: white;-fx-font-family: 'Courier New';");
+
+					playerTwoNameLabel.setText(playerTwoNameTF.getText());
+					playerTwoNameLabel.setStyle(
+							"-fx-font-size: 30px;-fx-font-weight: bold;-fx-text-fill: white;-fx-font-family: 'Courier New';");
+
+					GridPane twoPlayerGameGP = new GridPane();
+
+					HBox hBox = new HBox(20);
+					hBox.getChildren().addAll(BackGameButton, RestatGameButton, showNumber);
+					twoPlayerGameGP.add(hBox, 0, 0);
+
+					twoPlayerGameGP.add(onePlayerImageView, 0, 1);
+					twoPlayerGameGP.add(twoPlayerImageView, 1, 1);
+					twoPlayerGameGP.add(playerOneNameLabel, 0, 2);
+					twoPlayerGameGP.add(playerOneNumbers, 1, 3);
+					twoPlayerGameGP.add(playerTwoNameLabel, 1, 2);
+					twoPlayerGameGP.add(playerTwoNumbers, 1, 3);
+
+					twoPlayerGameGP.setHgap(200);
+					twoPlayerGameGP.setVgap(20);
+
+					showNumber.setVisible(false);
+					resultLabel.setVisible(false);
+
+					try {
+						if (!selectNumbersOfCoinsTF.getText().isEmpty() || !enterNumbersTF.getText().isEmpty()) {
+							StackPane pane = new StackPane();
+							displayCoinsInGridPaneIn2Player(gameBetweenTwoPlayersBP, gameBetweenTwoPlayersScene, coins,
+									pane);
+
+							showNumber.setOnAction(eventShowResult -> {
+								showNumber.setVisible(false);
+
+								resultLabel.setVisible(true);
+
+								String winner = (player1Score > player2Score) ? "Player 1 Wins!" : "Player 2 Wins!";
+								String message = winner + "\nPlayer 1's Score: " + player1Score + "\nPlayer 2's Score: "
+										+ player2Score;
+
+								resultLabel.setText(message);
+								resultLabel.setStyle(
+										"-fx-font-size: 25px; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: 'Courier New';");
+
+								VBox resultVBox = new VBox(50);
+								resultVBox.getChildren().addAll(resultLabel);
+								resultVBox.setAlignment(Pos.TOP_CENTER);
+
+								gameBetweenTwoPlayersBP.setCenter(resultVBox);
+								gameBetweenTwoPlayersBP.setAlignment(resultVBox, Pos.TOP_CENTER);
+
+							});
+
+						}
+					} catch (Exception e) {
+						exceptionAlertMethod(e);
 					}
-				} catch (Exception e) {
-					exceptionAlertMethod(e);
+
+					showNumber.setStyle(
+							"-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+									+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+									+ "-fx-border-width: 3; -fx-font-size: 15px;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
+
+					gameBetweenTwoPlayersBP.setStyle("-fx-background-color: rgb(1, 223, 148)");
+					gameBetweenTwoPlayersBP.setLeft(twoPlayerGameGP);
+
+					gameBetweenTwoPlayersBP.setPadding(new Insets(50, 100, 500, 200));
+					primaryStage.setScene(gameBetweenTwoPlayersScene);
+					primaryStage.setTitle("Two Player Game Scene");
+
+				} else {
+					primaryStage.setScene(onePlayerGameScene);
+					primaryStage.setTitle("One Player Game");
 				}
-
-				gameBetweenTwoPlayersBP.setStyle("-fx-background-color: rgb(210, 255, 77)");
-				gameBetweenTwoPlayersBP.setLeft(twoPlayerGameGP);
-				gameBetweenTwoPlayersBP.setPadding(new Insets(50, 100, 500, 200));
-				primaryStage.setScene(gameBetweenTwoPlayersScene);
-				primaryStage.setTitle("gameBetweenTwoPlayersScene");
 			} else {
-				primaryStage.setScene(onePlayerGameScene);
-				primaryStage.setTitle("One Player Game !!!");
+				errorAlert.setTitle("Event confirmation error");
+				errorAlert.setContentText("You must first press the Confirm Action button.");
+				errorAlert.show();
 			}
-
 		};
-		enterCircle.setOnMouseClicked(enterHandler);
-		nextText.setOnMouseClicked(enterHandler);
+
+		nextButton.setOnMouseClicked(nextHandler);
 
 		///////////////// ONE PLAYER SCREEN
 
 		selectOnePlayer.setOnAction(event -> {
 			primaryStage.setScene(selectSourceNumbersScene);
+			userChoice = "One player";
+			primaryStage.setScene(selectSourceNumbersScene);
 		});
 
-		onePlayerGameBP.setStyle("-fx-background-color: rgb(210, 255, 77)");
+		onePlayerGameBP.setStyle("-fx-background-color: rgb(1, 223, 148)");
 
-		Image onePlayerImage = new Image("/computer3.png");
-		Image twoPlayerImage = new Image("/person7.png");
+		Image onePlayerImage = new Image("/computer.png");
+		Image twoPlayerImage = new Image("/male.png");
 
 		ImageView onePlayerImageView = new ImageView(onePlayerImage);
 		ImageView TwoPlayerImageView = new ImageView(twoPlayerImage);
@@ -575,39 +730,136 @@ public class Game extends Application {
 		picturesForGameHB.getChildren().addAll(onePlayerImageView, TwoPlayerImageView);
 
 		Button showNumbersbutton = new Button("Show numbers");
-		showNumbersbutton.setStyle(
-				"-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(179, 255, 224);"
+		showNumbersbutton
+				.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
 						+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
-						+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: black;-fx-font-weight: bold;");
-//		showNumbersbutton.setOnAction(event -> {
+						+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
+		showNumbersbutton.setOnAction(event -> {
+			try {
+				if (!selectNumbersOfCoinsTF.getText().isEmpty() || !enterNumbersTF.getText().isEmpty()) {
+					StackPane pane = new StackPane();
+					displayCoinsInGridPane(onePlayerGameBP, onePlayerGameScene, coins, pane);
+				}
 
-		try {
-
-			if (!selectNumbersOfCoinsTF.getText().isEmpty() || !enterNumbersTF.getText().isEmpty()) {
-				StackPane pane = new StackPane();
-				displayCoinsInGridPane(gameBetweenTwoPlayersBP, gameBetweenTwoPlayersScene, coins, pane);
-
+			} catch (Exception e) {
+				exceptionAlertMethod(e);
 			}
-			System.out.println(coins.getNumberOfCoins() + "   coins.getNumberOfCoins()");
-			System.out.println(coins.getCoins()[0] + "    ----  " + coins.getCoins()[coins.getCoins().length - 1]);
+		});
 
-		} catch (Exception e) {
-			exceptionAlertMethod(e);
-		}
-//		showNumbersbutton.setDisable(true);
+		Button showDPTableButton = new Button("Show DP Table");
+		showDPTableButton
+				.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+						+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+						+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
 
-//		});
-		onePlayerGameBP.setTop(showNumbersbutton);
+		Button backToGameBetweenTwoPlayersSceneButton = new Button("Back");
+		backToGameBetweenTwoPlayersSceneButton.setStyle("-fx-border-width: 3px; " + "-fx-border-color: transparent; "
+				+ "-fx-background-color: rgb(21, 32, 50);" + " -fx-background-radius: 10em; "
+				+ "-fx-padding: 10px 10px; " + "-fx-border-width: 3; " + "-fx-font-size: 15px; "
+				+ "-fx-text-fill: white; " + "-fx-font-weight: bold; " + "-fx-font-family: 'Courier New';");
+		backToGameBetweenTwoPlayersSceneButton.setOnAction(event -> {
+			primaryStage.setScene(onePlayerGameScene);
+			enterNumbersTF.clear();
+			selectNumbersOfCoinsTF.clear();
+			coinGrid.getChildren().clear();
+			isClick = false;
+		});
+
+		showDPTableButton.setOnAction(event -> {
+			BorderPane dpTableBorderPane = new BorderPane();
+			String style = "-fx-background-color: rgb(1, 223, 148); -fx-font-family: 'Courier New'; -fx-text-fill: white;";
+			dpTableBorderPane.setStyle(style);
+			dpTableBorderPane.setPadding(new Insets(50, 100, 100, 0));
+
+			BorderPane dpTableWithScrollPane = createDPTableWithScrollPane(coins.getDp());
+			dpTableWithScrollPane.setStyle("-fx-background-color: rgb(1, 223, 148)");
+			dpTableBorderPane.setCenter(dpTableWithScrollPane);
+			dpTableBorderPane.setBottom(backToGameBetweenTwoPlayersSceneButton);
+
+			dpTableBorderPane.setAlignment(backToGameBetweenTwoPlayersSceneButton, Pos.CENTER);
+			Scene dpTableScene = new Scene(dpTableBorderPane, SCENE_WIDTH, SCENE_HEIGHT);
+
+			dpTableScene.setFill(Color.rgb(1, 223, 148));
+			primaryStage.getScene().setFill(Color.rgb(1, 223, 148));
+
+			primaryStage.setScene(dpTableScene);
+			primaryStage.setTitle("Title");
+		});
+
+		Button expectedResultButton = new Button("Expected Result");
+		expectedResultButton
+				.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+						+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+						+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
+
+		Label expectedResultLabel = new Label();
+		expectedResultLabel.setStyle(
+				"-fx-font-size: 15px; -fx-font-weight: bold; -fx-font-family: 'Courier New'; -fx-text-fill: white;");
+		expectedResultButton.setOnAction(e -> {
+			int result = coins.calculateDP();
+			expectedResultLabel.setVisible(true);
+			expectedResultLabel.setText("Expected Result: " + result);
+		});
+
+		Button backSelectSourceNumbersSceneButton = new Button("Back");
+		backSelectSourceNumbersSceneButton
+				.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+						+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+						+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
+		backSelectSourceNumbersSceneButton.setOnAction(event -> {
+			enterNumbersTF.clear();
+			selectNumbersOfCoinsTF.clear();
+			coinGrid.getChildren().clear();
+			primaryStage.setScene(selectSourceNumbersScene);
+			isClick = false;
+			expectedResultLabel.setVisible(false);
+			gridPane.getChildren().clear();
+
+		});
+
+		Button restartButton = new Button("Restart");
+		restartButton
+				.setStyle("-fx-border-width: 3px;-fx-border-color: transparent;-fx-background-color: rgb(21, 32, 50);"
+						+ " -fx-background-radius: 10em;-fx-padding: 10px 10px;"
+						+ "-fx-border-width: 3; -fx-font-size: 15px ;-fx-text-fill: white;-fx-font-weight: bold; -fx-font-family: 'Courier New';");
+		restartButton.setOnAction(event -> {
+			enterNumbersTF.clear();
+			selectNumbersOfCoinsTF.clear();
+			coinGrid.getChildren().clear();
+			primaryStage.setScene(selectSourceNumbersScene);
+			isClick = false;
+		});
+
+		HBox showButtonsHB = new HBox();
+		showButtonsHB.getChildren().addAll(showNumbersbutton, showDPTableButton, expectedResultButton,
+				expectedResultLabel, backSelectSourceNumbersSceneButton, restartButton);
+		showButtonsHB.setSpacing(30);
 
 		onePlayerGameBP.setLeft(picturesForGameHB);
-//		onePlayerGameBP.setAlignment(picturesForGameHB, Pos.CENTER_LEFT);
 		onePlayerGameBP.setPadding(new Insets(50, 100, 500, 200));
+		onePlayerGameBP.setTop(showButtonsHB);
+
+		onePlayerGameBP.setLeft(picturesForGameHB);
+
+		backButton.setOnAction(event -> {
+			if (userChoice == "Two player") {
+				primaryStage.setScene(twoPlayerInfoScene);
+
+			} else {
+
+				primaryStage.setScene(SelectNumberOfPlayersScene);
+				enterNumbersTF.clear();
+				selectNumbersOfCoinsTF.clear();
+				coinGrid.getChildren().clear();
+			}
+
+		});
 
 		//////////////// FIRST SCREEN
 
 		Button startGameButton = new Button("START");
 		startGameButton.setStyle(
-				"-fx-border-width: 5px;-fx-border-color: rgb(0, 0, 0);-fx-background-color: transparent; -fx-background-radius: 50em;-fx-padding: 20px 40px;fx-font-family: 'Arial';-fx-border-width: 3; -fx-font-size: 40px ;-fx-text-fill: white;-fx-font-weight: bold;");
+				"-fx-border-width: 5px;-fx-border-color: rgb(0, 0, 0);-fx-background-color: transparent; -fx-background-radius: 50em;-fx-padding: 20px 40px;-fx-font-family: 'Courier New';-fx-border-width: 3; -fx-font-size: 40px ;-fx-text-fill: white;-fx-font-weight: bold;");
 
 		startGameButton.setOnAction(event -> {
 			primaryStage.setScene(SelectNumberOfPlayersScene);
@@ -616,7 +868,7 @@ public class Game extends Application {
 		});
 		BorderPane startGameBP = new BorderPane();
 		startGameBP.setCenter(startGameButton);
-		startGameBP.setStyle("-fx-background-image: url('AlgoPicture.png');-fx-background-size: cover;");
+		startGameBP.setStyle("-fx-background-image: url('startGameImage.jpg');-fx-background-size: cover;");
 		startGameBP.setAlignment(startGameButton, Pos.CENTER);
 		startGameBP.setPadding(new Insets(200, 15, 15, 50));
 
@@ -633,6 +885,7 @@ public class Game extends Application {
 	}
 
 	public void exceptionAlertMethod(Exception e) {
+		Alert exceptionAlert = new Alert(AlertType.ERROR);
 		exceptionAlert.setTitle("Exception Dialog");
 		exceptionAlert.setHeaderText("Look, an Exception Dialog");
 		exceptionAlert.setContentText(e.getMessage());
@@ -646,91 +899,24 @@ public class Game extends Application {
 		exceptionAlert.getDialogPane().setExpandableContent(borderPaneException);
 		exceptionAlert.show();
 	}
-//	public int[] fromFileToAges(File filePath) throws Exception {
-//		try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-//			String line;
-//			while ((line = reader.readLine()) != null) {
-//				String[] arr = line.split(",");
-//				if (arr.length == 5) {
-//					String name = null, eventLocation = null, dataOfDeath = null;
-//					int age = 0;
-//					char gendar = 0;
-//					try {
-//						name = arr[0].trim();
-//						age = Integer.parseInt(arr[1].trim());
-//						eventLocation = arr[2];
-//						dataOfDeath = arr[3];
-//						gendar = arr[4].charAt(0);
-//					} catch (Exception e) {
-//						System.err.println("Missing data for: " + name);
-////						loadArea.setText("Missing or invalid data for: " + name);
-//					}
-////					martyr = new Martyr(name, age, eventLocation, dataOfDeath, gendar);
-////					list.add(martyr);
-////					System.out.println(martyr.toString());
-//				}
-//			}
-//			return list;
-//		}
-//	}
 
-//	private void loadInputScene(Stage stage) {
-//		TextField inputField = new TextField();
-//		Button enterButton = new Button("Enter");
-//		VBox inputLayout = new VBox(10);
-//		inputLayout.getChildren().addAll(new Label("Fill in your information:"), inputField, enterButton);
-//		Scene inputScene = new Scene(inputLayout, 300, 200);
-//
-//		// Action for the Enter button
-//		enterButton.setOnAction(event -> {
-//			if (userChoice.equals("A")) {
-//				loadFinalScene(stage, "You chose Scene A. You entered: " + inputField.getText());
-//			} else {
-//				loadFinalScene(stage, "You chose Scene B. You entered: " + inputField.getText());
-//			}
-//		});
-//
-//		// Switch to the input scene
-//		stage.setScene(inputScene);
-//	}
 	public void displayCoinsInGridPane(BorderPane borderPane, Scene scene, Coins coins, StackPane framedNumberSP) {
-		GridPane gridPane = new GridPane();
 		gridPane.setHgap(5);
 		gridPane.setVgap(5);
 
 		int columnIndex = 0;
 		int rowIndex = 0;
-
-		for (int i = 0; i < coins.getNumberOfCoins(); i++) {
-			int number = coins.getCoins()[i];
+		int MAX_COLUMNS = 10;
+		for (int i = 0; i < coins.getN(); i++) {
+			final int number = coins.getCoins()[i];
 			Text numberText = new Text(String.valueOf(number));
 			StackPane numberPane = new StackPane(numberText);
 			numberPane.setPadding(new Insets(10));
-			numberPane.setStyle("-fx-border-color: black; -fx-border-width: 5;");
-
-			numberPane.setOnMouseClicked(event -> {
-				if (isPlayerOneTurn || !isPlayerOneTurn) {
-					if (number != coins.getCoins()[0] || number == coins.getCoins()[coins.getCoins().length - 1]) {
-						warningAlert.setTitle("Warning when choosing coin");
-						warningAlert.setContentText("The player is allowed to choose the first or last coin.");
-						warningAlert.show();
-					} else if (isPlayerOneTurn) {
-						numberPane.setStyle(
-								"-fx-background-color: rgb(255, 153, 51);-fx-border-color: black; -fx-border-width: 5;");
-
-					} else {
-						numberPane.setStyle(
-								"-fx-background-color: rgb(255, 255, 102);-fx-border-color: black; -fx-border-width: 5;");
-					}
-					isPlayerOneTurn = !isPlayerOneTurn;
-
-				}
-
-			});
+			numberPane.setStyle("-fx-border-color: rgb(21, 32, 50); -fx-border-width: 5; -fx-font-size: 16px;");
 
 			gridPane.add(numberPane, columnIndex, rowIndex);
 			columnIndex++;
-			if (columnIndex == 10) {
+			if (columnIndex == MAX_COLUMNS) {
 				rowIndex++;
 				columnIndex = 0;
 			}
@@ -740,138 +926,203 @@ public class Game extends Application {
 		scene.setRoot(borderPane);
 	}
 
-//	private EventHandler<MouseEvent> createConfirmationHandler() {
-//		return event -> {
-//			Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-//			alert.setTitle("Confirmation");
-//			alert.setHeaderText("Are you sure?");
-//			alert.setContentText("Do you want to proceed?");
-//
-//			ButtonType result = alert.showAndWait().orElse(ButtonType.CANCEL);
-//
-//			if (result == ButtonType.OK) {
-//				System.out.println("Action confirmed!");
-//			} else {
-//				System.out.println("Action canceled.");
-//			}
-//		};
-//	}
-	
-	
 	private void showConfirmationDialog() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirmation");
-        alert.setHeaderText("Are you sure?");
-        alert.setContentText("Do you want to proceed with this action? Click 'OK' to confirm or 'Cancel' to abort.");
+		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+		alert.setTitle("Confirmation");
+		alert.setHeaderText("Are you sure?");
+		alert.setContentText("Do you want to proceed with this action? Click 'OK' to confirm or 'Cancel' to abort.");
 
-        ButtonType result = alert.showAndWait().orElse(ButtonType.CANCEL);
+		ButtonType result = alert.showAndWait().orElse(ButtonType.CANCEL);
+	}
 
-        if (result == ButtonType.OK) {
-            // Perform the action on confirmation
-            System.out.println("Action confirmed!");
-            // Add your specific action logic here
-        }
-    }
-	
-//	private void populateGridPane() {
-//		gridPane.getChildren().clear();
-//		int columnIndex = 0;
-//		int rowIndex = 0;
-//
-//		for (int i = 0; i < remainingCoins.size(); i++) {
-//			int number = remainingCoins.get(i);
-//			StackPane numberPane = createNumberPane(number, i);
-//			gridPane.add(numberPane, columnIndex, rowIndex);
-//			columnIndex++;
-//			if (columnIndex == 10) {
-//				rowIndex++;
-//				columnIndex = 0;
-//			}
-//		}
-//	}
-//
-//	private StackPane createNumberPane(int number, int index) {
-//	        StackPane numberPane = new StackPane(new Label(String.valueOf(number)));
-//	        numberPane.setPadding(new Insets(10));
-//	        numberPane.setStyle("-fx-border-color: black; -fx-border-width: 2;");
-//
-//	        numberPane.setOnMouseClicked(event -> {
-//	            if (!numberPane.getStyle().contains("disabled")) { // Ensure the number is not already chosen
-//	                if (isPlayerOneTurn) {
-//	                    // Player 1's turn
-//	                    numberPane.setStyle("-fx-background-color: red; -fx-opacity: 0.5");
-//	                } else {
-//	                    // Player 2's turn
-//	                    numberPane.setStyle("-fx-background-color: blue; -fx-opacity: 0.5");
-//	                }
-//
-//	                // Disable the clicked number
-//	                numberPane.setStyle("-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.7), 10, 0, 0, 1)");
-//	                numberPane.setDisable(true);
-//
-//	                // Toggle the player turn
-//	                isPlayerOneTurn = !isPlayerOneTurn;
-//
-//	                // Check for game over
-//	                if (allNumbersDisabled()) {
-//	                    // Declare the winner based on the final score
-//	                    Alert gameOverAlert = new Alert(Alert.AlertType.INFORMATION);
-//	                    gameOverAlert.setTitle("Game Over");
-//	                    gameOverAlert.setHeaderText("Game Over!");
-//	                    gameOverAlert.setContentText(isPlayerOneTurn  ? "Player 2 wins!" : "Player 1 wins!");
-//	                    gameOverAlert.showAndWait();
-//	                }
-//	            }
-//	        });
-//
-//	        return numberPane;
-//	    }
-//
-//	private boolean allNumbersDisabled() {
-//		for (Node node : gridPane.getChildren()) {
-//			if (node instanceof StackPane && !((StackPane) node).isDisabled()) {
-//				return false;
-//			}
-//		}
-//		return true;
-//	}
+	private BorderPane createDPTableWithScrollPane(int[][] dp) {
+		ScrollPane scrollPane = new ScrollPane();
+		scrollPane.setFitToHeight(true);
+		scrollPane.setFitToWidth(false);
+		scrollPane.setStyle("-fx-background-color: rgb(1, 223, 148);");
 
-//	 private boolean allNumbersDisabled() {
-//	        for (Node node : gridPane.getChildren()) {
-//	            if (node instanceof StackPane && !((StackPane) node).isDisabled()) {
-//	                return false;
-//	            }
-//	        }
-//	        return true;
-//	    }
-//	private void selectCoin(StackPane stackPane, int number) {
-//	    int currentPlayer = getCurrentPlayer(); // Implement this logic
-//
-//	    if (currentPlayer == 1) {
-//	        player1Coins.add(number);
-//	        stackPane.setStyle("-fx-background-color: red; -fx-border-color: black; -fx-border-width: 2;");
-//	    } else {
-//	        player2Coins.add(number);
-//	        stackPane.setStyle("-fx-background-color: blue; -fx-border-color: black; -fx-border-width: 2;");
-//	    }
-//
-//	    // Switch to the next player
-//	    currentPlayer = (currentPlayer == 1) ? 2 : 1;
-//	}
+		GridPane grid = new GridPane();
+		int rows = dp.length;
+		int cols = dp[0].length;
 
-//	private boolean getCurrentPlayer() {
-//		return playerturn;
-//	}
-//
-//	private boolean switchPlayer() {
-//		if (!playerturn) {
-//			playerturn = true;
-//			return true;
-//		}
-//
-//		else {
-//			playerturn = false;
-//			return false;
-//		}
-//	}
+		grid.setStyle("-fx-background-color: rgb(1, 223, 148);");
+
+		// Add column headers (i values)
+		for (int i = 0; i < rows; i++) {
+			Label label = new Label("i=" + i);
+			label.setStyle(
+					"-fx-padding: 10px; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Courier New';-fx-text-fill: white;");
+			label.setPrefWidth(60);
+			label.setPrefHeight(40);
+			label.setAlignment(Pos.CENTER);
+			grid.add(label, 0, i + 1); // Add i values in the first column
+		}
+
+		// Add row headers (j values)
+		for (int j = 0; j < cols; j++) {
+			Label label = new Label("j=" + j);
+			label.setStyle(
+					"-fx-padding: 10px; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Courier New';-fx-text-fill: white;");
+			label.setPrefWidth(60);
+			label.setPrefHeight(40);
+			label.setAlignment(Pos.CENTER);
+			grid.add(label, j + 1, 0); // Add j values in the first row
+		}
+
+		// Add DP values
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
+				Label label = new Label(String.valueOf(dp[i][j]));
+				label.setStyle(
+						"-fx-padding: 10px; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Courier New';");
+				label.setPrefWidth(60);
+				label.setPrefHeight(40);
+				label.setAlignment(Pos.CENTER);
+				grid.add(label, j + 1, i + 1); // Add dp values in the table cells
+			}
+		}
+
+		grid.setAlignment(Pos.TOP_LEFT);
+		grid.setHgap(10);
+		grid.setVgap(10);
+		grid.setStyle("-fx-background-color: rgb(1, 223, 148);");
+		scrollPane.setContent(grid);
+
+		Label titleLabel = new Label("DP TABLE\n\n");
+		titleLabel.setStyle(
+				"-fx-font-size: 40px; -fx-font-weight: bold; -fx-font-family: 'Courier New';  -fx-text-fill:rgb(21, 32, 50);");
+		titleLabel.setAlignment(Pos.CENTER);
+
+		VBox tableContainer = new VBox(10, titleLabel, scrollPane);
+		tableContainer.setPadding(new Insets(0, 0, 0, 100));
+		tableContainer.setAlignment(Pos.TOP_LEFT);
+		tableContainer.setStyle("-fx-background-color: rgb(1, 223, 148);");
+
+		BorderPane borderPane = new BorderPane();
+		borderPane.setCenter(tableContainer);
+		borderPane.setStyle("-fx-background-color: rgb(1, 223, 148);");
+
+		return borderPane;
+	}
+
+	private void displayCoinsInGridPaneIn2Player(BorderPane borderPane, Scene scene, Coins coins, StackPane pane) {
+		GridPane gridPane = new GridPane();
+		gridPane.setHgap(5);
+		gridPane.setVgap(5);
+
+		int columnIndex = 0;
+		int rowIndex = 0;
+		int MAX_COLUMNS = 10;
+
+		player1Selections = new int[coins.getN()];
+		player2Selections = new int[coins.getN()];
+
+		int[] coinArray = coins.getCoins();
+		for (int i = 0; i < coins.getN(); i++) {
+			final int coin = coinArray[i];
+
+			Text coinText = new Text(String.valueOf(coin));
+			coinText.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Courier New';");
+
+			StackPane coinPane = new StackPane(coinText);
+			coinPane.setPadding(new Insets(5));
+			coinPane.setStyle("-fx-border-color: rgb(21, 32, 50); -fx-border-width: 5;");
+			coinPane.setPrefWidth(60);
+			coinPane.setPrefHeight(60);
+
+			gridPane.add(coinPane, columnIndex, rowIndex);
+			columnIndex++;
+
+			if (columnIndex == MAX_COLUMNS) {
+				rowIndex++;
+				columnIndex = 0;
+			}
+
+			coinPane.setOnMouseClicked(event -> {
+				if (coin == coinArray[0] || coin == coinArray[coins.getN() - 1]) {
+					boolean removed = coins.removeCoin(coin);
+					if (removed) {
+						if (turn == 1) {
+							player1Score += coin;
+						} else {
+							player2Score += coin;
+						}
+						turn = (turn == 1) ? 2 : 1;
+
+						updateGrid(gridPane, coins);
+					} else {
+						showAlert("Invalid Selection", "This coin was already removed!");
+					}
+				} else {
+					showAlert("Invalid Selection", "You can only select the first or last coin!");
+				}
+			});
+
+		}
+
+		borderPane.setRight(gridPane);
+		scene.setRoot(borderPane);
+	}
+
+	private void initializeCoins(int length) {
+		coins = new Coins(length);
+		coins.initalizationCoins();
+		player1Selections = new int[length];
+		player2Selections = new int[length];
+	}
+
+	private void updateGrid(GridPane gridPane, Coins coins) {
+		gridPane.getChildren().clear();
+		displayCoinsInGridPaneIn2Player((BorderPane) gridPane.getParent(), gridPane.getScene(), coins, null);
+		if (coins.getN() == 0) {
+			PauseTransition pause = new PauseTransition(Duration.seconds(0.5));
+			pause.setOnFinished(event -> {
+				showNumber.setVisible(true);
+
+			});
+			pause.play();
+		}
+	}
+
+	private String arrayToString(int[] array, int size) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int i = 0; i < size; i++) {
+			sb.append(array[i]);
+			if (i < size - 1)
+				sb.append(", ");
+		}
+		sb.append("]");
+		return sb.toString();
+	}
+
+	private void showResults() {
+
+		Label player1ResultLabel = new Label("Player 1: " + playerOneNameTF.getText() + " - Score: " + player1Score);
+		player1ResultLabel.setStyle(
+				"-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: 'Courier New';");
+
+		Label player2ResultLabel = new Label("Player 2: " + playerTwoNameTF.getText() + " - Score: " + player2Score);
+		player2ResultLabel.setStyle(
+				"-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white; -fx-font-family: 'Courier New';");
+
+		String winner = (player1Score > player2Score) ? "Player 1 Wins!" : "Player 2 Wins!";
+		Label winnerLabel = new Label(winner);
+		winnerLabel.setStyle(
+				"-fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: gold; -fx-font-family: 'Courier New';");
+
+		VBox resultVBox = new VBox(20);
+		resultVBox.getChildren().addAll(player1ResultLabel, player2ResultLabel, winnerLabel);
+
+		gameBetweenTwoPlayersBP.setCenter(resultVBox);
+	}
+
+	private void showAlert(String title, String message) {
+		Alert alert = new Alert(Alert.AlertType.WARNING);
+		alert.setTitle(title);
+		alert.setHeaderText(null);
+		alert.setContentText(message);
+		alert.showAndWait();
+	}
+
 }

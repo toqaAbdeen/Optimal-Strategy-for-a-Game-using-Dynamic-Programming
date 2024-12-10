@@ -1,1 +1,49 @@
-/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
+/* Style for ScrollPane */
+.scroll-pane {
+    -fx-background-color: rgb(1, 223, 148);
+}
+
+/* Style for GridPane cells (Labels inside the Grid) */
+.dp-label {
+    -fx-padding: 10px;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-font-family: 'Courier New';
+    -fx-alignment: center;
+    -fx-pref-width: 60;
+    -fx-pref-height: 40;
+}
+
+/* Style for the title label */
+.title-label {
+    -fx-font-size: 40px;
+    -fx-font-weight: bold;
+    -fx-font-family: 'Courier New';
+    -fx-text-fill: rgb(21, 32, 50);
+    -fx-alignment: center;
+}
+
+/* Style for the back button */
+.back-button {
+    -fx-border-width: 3px;
+    -fx-border-color: transparent;
+    -fx-background-color: rgb(21, 32, 50);
+    -fx-background-radius: 10em;
+    -fx-padding: 10px 10px;
+    -fx-font-size: 15px;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-family: 'Courier New';
+}
+
+/* Style for VBox containing all elements */
+.table-container {
+    -fx-padding: 0 0 0 100;
+    -fx-alignment: top-left;
+}
+
+/* Style for BorderPane that holds the table */
+.dp-table-border-pane {
+    -fx-background-color: rgb(1, 223, 148);
+    -fx-padding: 50 0 100 0;
+}
